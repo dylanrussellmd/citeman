@@ -1,3 +1,5 @@
+import six
+from abc import ABCMeta, abstractmethod
 from enum import Enum
 from typing import Type
 import warnings
@@ -9,6 +11,7 @@ import re
 # You have to choose the correct interpreter.
 # Use shortcuts "Ctrl+Shift+P" and type "Python: Select Interperter" to choose the venv.
 
+@six.add_metaclass(ABCMeta)
 class Query:
     def __init__(self, id: Type[str]) -> None:
         if isinstance(id, str):
@@ -20,14 +23,18 @@ class Query:
             raise TypeError("ID must be a string or a list of strings")
         
         self.type = self._type(self.id)
+        self.result = self._result(self.id)
 
     @staticmethod
     def _type(id):
         for reid in ReID:
             if re.match(reid.value, id, flags=re.I):
-                print(f"Pattern matches: {reid.name}:{id}")
                 return reid.name
         raise ValueError("ID is not a valid article identifier")
+
+    @abstractmethod
+    def _result(self, id):
+        pass
 
 class ReID(Enum):
     DOI = r"^10\.\d{4,9}\/[-._;()/:A-Z0-9]+$"
@@ -39,9 +46,6 @@ class ReID(Enum):
 
 # consider allowing different urls/formats for cn.contentnegotiation
 class CrossRef(Query):
-    def __init__(self, id: type[str]) -> None:
-        super().__init__(id)
-        self.result = self._result(self.id)
 
     @staticmethod            
     def _result(id):
@@ -53,10 +57,8 @@ class CrossRef(Query):
 
 # https://biopython.org/docs/latest/api/Bio.Entrez.html
 # https://www.ncbi.nlm.nih.gov/books/NBK25499/#chapter4.EFetch
+# Incomplete as of now
 class PubMed(Query):
-    def __init__(self, id: type[str]) -> None:
-        super().__init__(id)
-        self.result = self._result(self.id)
     
     @staticmethod            
     def _result(id):

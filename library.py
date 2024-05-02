@@ -4,14 +4,14 @@ from typing import List
 from bibtexparser.splitter import Splitter
 from bibtexparser.model import Entry
 from bibtexparser.exceptions import BlockAbortedException, ParserStateException
-from query import CrossRef
 
 # Overwriting bibtexparser.Splitter to return an Entry.
 class EntrySplitter(Splitter):
     def __init__(self, bibstr: str):
         super().__init__(bibstr)
+        self.entry = self.__split()
 
-    def split(self) -> Entry:      
+    def __split(self) -> Entry:      
         """Split the bibtex-string into blocks and add them to the library.
 
         Args:
@@ -91,10 +91,3 @@ class EntrySplitter(Splitter):
                 pass
 
         return entry
-
-doi="10.1126/science.adh7954"
-doi2="poop"
-pmid = "38662827"
-
-citation = CrossRef(doi)
-print(EntrySplitter(citation.result).split())
