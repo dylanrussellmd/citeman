@@ -4,7 +4,6 @@ from enum import Enum
 from typing import Type
 import warnings
 from habanero import cn
-from Bio import Entrez # type: ignore
 import re
 
 # When working with `venv`, to get pylance to work:
@@ -54,17 +53,3 @@ class CrossRef(Query):
         except:
             raise
         return result
-
-# https://biopython.org/docs/latest/api/Bio.Entrez.html
-# https://www.ncbi.nlm.nih.gov/books/NBK25499/#chapter4.EFetch
-# Incomplete as of now
-class PubMed(Query):
-    
-    @staticmethod            
-    def _result(id):
-        try:
-            Entrez.email = "dyl.russell@gmail.com"
-            handle = Entrez.esummary(db="pubmed", id = id, retmode= "xml")
-            records = Entrez.parse(handle)
-        except:
-            raise

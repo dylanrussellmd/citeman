@@ -1,6 +1,5 @@
 import logging
 import re
-from typing import List
 from bibtexparser.splitter import Splitter
 from bibtexparser.model import Entry
 from bibtexparser.exceptions import BlockAbortedException, ParserStateException
@@ -9,9 +8,8 @@ from bibtexparser.exceptions import BlockAbortedException, ParserStateException
 class EntrySplitter(Splitter):
     def __init__(self, bibstr: str):
         super().__init__(bibstr)
-        self.entry = self.__split()
 
-    def __split(self) -> Entry:      
+    def split(self) -> Entry:      
         """Split the bibtex-string into blocks and add them to the library.
 
         Args:
@@ -22,11 +20,6 @@ class EntrySplitter(Splitter):
         self._markiter = re.finditer(
             r"(?<!\\)[\{\}\",=\n]|@[\w]*( |\t)*(?={)", self.bibstr, re.MULTILINE
         )
-
-        #if library is None:
-        #    library = Library()
-        #else:
-        #    logging.info("Adding blocks to existing library.")
 
         while True:
             m = self._next_mark(accept_eof=True)
