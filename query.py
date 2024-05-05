@@ -5,6 +5,7 @@ from typing import Type
 import warnings
 from habanero import cn
 import re
+from library import EntrySplitter
 
 # When working with `venv`, to get pylance to work:
 # You have to choose the correct interpreter.
@@ -20,9 +21,10 @@ class Query:
             self.id = id[0]
         else:
             raise TypeError("ID must be a string or a list of strings")
-        
         self.type = self._type(self.id)
+        self.success = True
         self.result = self._result(self.id)
+        self.block = None
 
     @staticmethod
     def _type(id):
@@ -30,6 +32,13 @@ class Query:
             if re.match(reid.value, id, flags=re.I):
                 return reid.name
         raise ValueError("ID is not a valid article identifier")
+
+    def fail(self, result):
+        self.success = False
+        self.result = result
+
+    def makeBlock(self):
+        self.block = EntrySplitter(self.result).split()
 
     @abstractmethod
     def _result(self, id):
@@ -46,7 +55,7 @@ class ReID(Enum):
 # consider allowing different urls/formats for cn.contentnegotiation
 class CrossRef(Query):
 
-    @staticmethod            
+    @staticmethod
     def _result(id):
         try:
             result = cn.content_negotiation(id, format='bibtex', url="https://doi.org")
