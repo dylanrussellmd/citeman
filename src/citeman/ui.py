@@ -3,6 +3,7 @@ from consolemenu import ConsoleMenu, Screen, SelectionMenu
 from consolemenu.items import FunctionItem
 from consolemenu.prompt_utils import PromptUtils, UserQuit
 from colors import color
+import pkg_resources
 from .processor import Processor
 import re
 
@@ -142,7 +143,8 @@ def removeCitation(block, processor):
     pu.clear()
 
 def logo():
-    with open('./logo', 'r', encoding="utf-8") as f:
+    logo_path = pkg_resources.resource_filename(__name__, 'logo')
+    with open(logo_path, 'r', encoding="utf-8") as f:
         return ''.join([line for line in f])
 
 def mainMenu():
