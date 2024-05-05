@@ -142,7 +142,7 @@ def removeCitation(block, processor):
     pu.clear()
 
 def logo():
-    with open('logo', 'r', encoding="utf-8") as f:
+    with open('./logo', 'r', encoding="utf-8") as f:
         return ''.join([line for line in f])
 
 def mainMenu():
