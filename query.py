@@ -6,6 +6,7 @@ import warnings
 from habanero import cn
 import re
 from library import EntrySplitter
+from colors import color
 
 # When working with `venv`, to get pylance to work:
 # You have to choose the correct interpreter.
@@ -40,8 +41,22 @@ class Query:
     def makeBlock(self):
         self.block = EntrySplitter(self.result).split()
 
+    def _handleResult(self, id):
+        try:
+            self._result(id)
+        except HTTPError:
+            error = f"{color('Unable to find', fg='red')} {input}"
+            self.fail(error)
+        except ValueError as e:
+            self.fail(errorReport(e))
+        except TypeError as e:
+            self.fail(errorReport(e))
+        except:
+            raise
+
     @abstractmethod
-    def _result(self, id):
+    @staticmethod
+    def _result(id):
         pass
 
 class ReID(Enum):
@@ -62,3 +77,6 @@ class CrossRef(Query):
         except:
             raise
         return result
+
+def errorReport(e):
+    return f"{color('Error:', fg='red')} {e.args[0]}"
