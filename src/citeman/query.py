@@ -5,7 +5,7 @@ from typing import Type
 import warnings
 from habanero import cn
 import re
-from library import EntrySplitter
+from .library import EntrySplitter
 from requests import HTTPError
 
 # When working with `venv`, to get pylance to work:

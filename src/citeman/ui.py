@@ -3,9 +3,8 @@ from consolemenu import ConsoleMenu, Screen, SelectionMenu
 from consolemenu.items import FunctionItem
 from consolemenu.prompt_utils import PromptUtils, UserQuit
 from colors import color
-from processor import Processor
+from .processor import Processor
 import re
-from ascii_magic import AsciiArt
 
 def queryReport(query):
     if query.success:

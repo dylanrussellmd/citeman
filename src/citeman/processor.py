@@ -1,4 +1,4 @@
-from query import CrossRef, Query
+from .query import CrossRef, Query
 
 class Processor():
     def __init__(self, library):
