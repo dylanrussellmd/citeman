@@ -5,6 +5,7 @@ from consolemenu.prompt_utils import PromptUtils, UserQuit
 from colors import color
 from processor import Processor
 import re
+from ascii_magic import AsciiArt
 
 def queryReport(query):
     if query.success:
@@ -141,25 +142,17 @@ def removeCitation(block, processor):
     pu.enter_to_continue()
     pu.clear()
 
+def logo():
+    with open('logo', 'r', encoding="utf-8") as f:
+        return ''.join([line for line in f])
+
 def mainMenu():
     library = Library()
     processor = Processor(library)
-    menu = ConsoleMenu("Pycite", "Select an option:")
+    menu = ConsoleMenu(logo(), "A simple command line citation manager for your academic manuscript.", show_exit_option=False)
     
     menu.append_item(FunctionItem("Query", QueryInput, [processor]))
     menu.append_item(FunctionItem("Show Citations", showCitations, [processor]))
     menu.append_item(FunctionItem("Remove Citations", removeCitations, [processor]))
 
     menu.show()
-#
-#doi="10.1371/journal.pone.0173664"
-#library = Library()
-#query = CrossRef(doi)
-#processor = Processor(query, library)
-#processor.process()
-#showCitations(library)
-
-mainMenu()
-#
-#doi2="poop"
-#pmid = "38662827"

@@ -1,0 +1,25 @@
+[build-system]
+requires = ["setuptools>=62.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "citeman"
+version = "0.1.1"
+authors = [
+    {name = "Dylan Russell, MD", email = "dyl.russell@gmail.com"}
+]
+maintainers = [
+   {name = "Dylan Russell, MD", email = "dyl.russell@gmail.com"}
+]
+description = "A simple command line citation manager for your academic manuscript."
+readme = "README.md"
+requires-python = ">=3.8"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent"
+]
+
+[project.urls]
+Homepage = "https://github.com/dylanrussellmd/pycite"
+Issues = "https://github.com/dylanrussellmd/pycite/issues"
