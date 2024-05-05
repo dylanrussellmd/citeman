@@ -1,8 +1,8 @@
-import logging
-import re
 from bibtexparser.splitter import Splitter
 from bibtexparser.model import Entry
 from bibtexparser.exceptions import BlockAbortedException, ParserStateException
+import logging
+import re
 
 # Overwriting bibtexparser.Splitter to return an Entry.
 class EntrySplitter(Splitter):

@@ -3,8 +3,8 @@ from consolemenu import ConsoleMenu, Screen, SelectionMenu
 from consolemenu.items import FunctionItem
 from consolemenu.prompt_utils import PromptUtils, UserQuit
 from colors import color
-import pkg_resources
 from .processor import Processor
+import pkg_resources
 import re
 
 def queryReport(query):

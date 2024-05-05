@@ -1,12 +1,12 @@
-import six
 from abc import ABCMeta, abstractmethod
 from enum import Enum
 from typing import Type
-import warnings
 from habanero import cn
-import re
-from .library import EntrySplitter
 from requests import HTTPError
+from .library import EntrySplitter
+import re
+import warnings
+import six
 
 # When working with `venv`, to get pylance to work:
 # You have to choose the correct interpreter.
