@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "citeman"
-version = "0.1.31"
+version = "0.1.33"
 authors = [
     {name = "Dylan Russell, MD", email = "dyl.russell@gmail.com"}
 ]
@@ -19,6 +19,17 @@ classifiers = [
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent"
 ]
+
+# https://setuptools.pypa.io/en/latest/userguide/datafiles.html
+# for all [tool.*] headings below
+[tool.setuptools]
+include-package-data = true
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+citeman = ["logo"]
 
 [project.urls]
 Homepage = "https://github.com/dylanrussellmd/pycite"
