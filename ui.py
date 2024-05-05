@@ -6,6 +6,20 @@ from colors import color
 from processor import Processor
 import re
 
+def queryReport(query):
+    if query.success:
+        return f"{color('Success:', fg='green')} {query.result}"
+    elif not query.success:
+        return f"{color('Error:', fg='red')} {query.result}"
+
+def libraryIsEmpty(processor):
+    if not processor.library.entries:
+        pu = PromptUtils(Screen())
+        pu.println(f"Library is {color('empty', fg='red')}.")
+        pu.enter_to_continue()
+        return True
+    return False
+
 def removeBraces(string):
     return re.sub(r'^\{?(.*?)\}?$', r'\1', string)
 
@@ -64,8 +78,8 @@ def QueryInput(processor):
         processor.processQuery(input)
         query = processor.getLastQuery()
         if query.success:
+            pu.println(queryReport(query))
             block = query.block
-            pu.println(color(f"Found {query.type}", fg="green"), query.id)
             pu.println(prettyPrintBlock(block))
             add = pu.prompt_for_yes_or_no(f"Add {prettyKey(block.key)} to library?")
             if add: 
@@ -74,16 +88,18 @@ def QueryInput(processor):
             else:
                 pu.println(prettyKey(block.key), color('not added to library', fg='red'), "\n")
         else:
-            pu.println(query.result)
+            pu.println(queryReport(query))
         
         again = pu.prompt_for_yes_or_no(f"Search {color('again?', fg='blue')}")
         if not again:
             break
         pu.clear()
 
-def showCitations(library):
+def showCitations(processor):
+    if libraryIsEmpty(processor):
+        return
     title = "Select an entry to view detailed information."
-    entries = library.entries
+    entries = processor.library.entries
     exit = len(entries)
     while True:
         selection = SelectionMenu.get_selection(prettyPrintBlocks(entries), title=title)
@@ -97,6 +113,33 @@ def showCitation(selection):
     pu = PromptUtils(Screen())
     pu.println(prettyPrintBlock(selection))
     pu.enter_to_continue()
+    pu.clear()
+
+def removeCitations(processor):
+    while True:
+        if libraryIsEmpty(processor):
+            return
+        title = "Select an entry to remove."
+        entries = processor.library.entries
+        exit = len(entries)
+        selection = SelectionMenu.get_selection(prettyPrintBlocks(entries), title=title)
+        try:
+            removeCitation(entries[selection], processor)
+        except IndexError:
+            if selection == exit:
+                break
+
+def removeCitation(block, processor):
+    pu = PromptUtils(Screen())
+    pu.println(prettyPrintBlock(block))
+    remove = pu.prompt_for_yes_or_no(f"Remove {prettyKey(block.key)} from library?")
+    if remove:
+        processor.remove(block)
+        pu.println(prettyKey(block.key), color('removed from library', fg='green'), "\n")
+    else:
+        pu.println(prettyKey(block.key), color('not removed from library', fg='red'), "\n")
+    pu.enter_to_continue()
+    pu.clear()
 
 def mainMenu():
     library = Library()
@@ -104,7 +147,8 @@ def mainMenu():
     menu = ConsoleMenu("Pycite", "Select an option:")
     
     menu.append_item(FunctionItem("Query", QueryInput, [processor]))
-    menu.append_item(FunctionItem("Show Citations", showCitations, [library]))
+    menu.append_item(FunctionItem("Show Citations", showCitations, [processor]))
+    menu.append_item(FunctionItem("Remove Citations", removeCitations, [processor]))
 
     menu.show()
 #

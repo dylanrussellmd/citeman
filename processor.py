@@ -1,6 +1,4 @@
 from query import CrossRef, Query
-from colors import color
-from requests import HTTPError
 
 class Processor():
     def __init__(self, library):
@@ -10,20 +8,15 @@ class Processor():
     def processQuery(self, input):
         try:
             query = CrossRef(input)
-            query.makeBlock()
-        except HTTPError:
-            error = f"{color('Unable to find', fg='red')} {input}"
-            query.fail(error)
-        except ValueError as e:
-            query.fail(errorReport(e))
-        except TypeError as e:
-            query.fail(errorReport(e))
+            self.queryHistory.append(query)
         except:
             raise
-        self.queryHistory.append(query)
-
+    
     def add(self, block) -> None:
         self.library.add(block)
+
+    def remove(self, block) -> None:
+        self.library.remove(block)
 
     def getQuery(self, index) -> Query:
         return self.queryHistory[index]
@@ -55,6 +48,3 @@ class TypedList(list):
         for element in iterable:
             self._validate(element)
         super().extend(iterable)
-
-def errorReport(e):
-    return f"{color('Error:', fg='red')} {e.args[0]}"
