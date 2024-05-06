@@ -4,8 +4,9 @@ from consolemenu.items import FunctionItem
 from consolemenu.prompt_utils import PromptUtils, UserQuit
 from colors import color
 from .processor import Processor
+from .bibliography import setup
+from .utils import removeBraces
 import pkg_resources
-import re
 
 def queryReport(query):
     if query.success:
@@ -20,9 +21,6 @@ def libraryIsEmpty(processor):
         pu.enter_to_continue()
         return True
     return False
-
-def removeBraces(string):
-    return re.sub(r'^\{?(.*?)\}?$', r'\1', string)
 
 def prettyKey(key):
     key = f"[@{key}]"
@@ -83,11 +81,30 @@ def QueryInput(processor):
             block = query.block
             pu.println(prettyPrintBlock(block))
             add = pu.prompt_for_yes_or_no(f"Add {prettyKey(block.key)} to library?")
+            pu.println()
             if add: 
-                processor.add(block)
-                pu.println(prettyKey(block.key), color('added to library', fg='green'), "\n")
+                try:
+                    processor.add(block)
+                    pu.println(prettyKey(block.key), color('added to library.', fg='green'), "\n")
+                except ValueError as e:
+                    pu.println(prettyKey(block.key), color('appears to be a duplicate key.', fg='red'))
+                    if processor.compare(query):
+                        pu.println(prettyKey(block.key), color(f"already exists in library with matching {query.type} {query.id}.", fg='red'))
+                        pu.println(prettyKey(block.key), color('not added to library.', fg='red'))
+                    else:
+                        pu.println("The duplicate", prettyKey(block.key), f"does not exist in the library with a matching {query.type}.")
+                        alternate = pu.prompt_for_yes_or_no(f"Add {prettyKey(block.key)} to library with an alternate key?")
+                        pu.println()
+                        if alternate:
+                            processor.incrementKey(block)
+                            print(block)
+                            print(query.block)
+                            processor.add(block)
+                            pu.println(prettyKey(block.key), color('added to library with alternate key.', fg='green'), "\n")
+                        else:
+                            pu.println(prettyKey(block.key), color('not added to library.', fg='red'))
             else:
-                pu.println(prettyKey(block.key), color('not added to library', fg='red'), "\n")
+                pu.println(prettyKey(block.key), color('not added to library.', fg='red'), "\n")
         else:
             pu.println(queryReport(query))
         
@@ -136,9 +153,9 @@ def removeCitation(block, processor):
     remove = pu.prompt_for_yes_or_no(f"Remove {prettyKey(block.key)} from library?")
     if remove:
         processor.remove(block)
-        pu.println(prettyKey(block.key), color('removed from library', fg='green'), "\n")
+        pu.println(prettyKey(block.key), color('removed from library.', fg='green'), "\n")
     else:
-        pu.println(prettyKey(block.key), color('not removed from library', fg='red'), "\n")
+        pu.println(prettyKey(block.key), color('not removed from library.', fg='red'), "\n")
     pu.enter_to_continue()
     pu.clear()
 
@@ -148,7 +165,7 @@ def logo():
         return ''.join([line for line in f])
 
 def mainMenu():
-    library = Library()
+    library = setup()
     processor = Processor(library)
     menu = ConsoleMenu(logo(), "A simple command line citation manager for your academic manuscript.", show_exit_option=False)
     
