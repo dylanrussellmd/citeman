@@ -37,6 +37,8 @@ where = ["src"]
 [tool.setuptools.package-data]
 citeman = ["logo"]
 
+[tool.setuptools_scm]
+
 [project.urls]
 Homepage = "https://github.com/dylanrussellmd/pycite"
 Issues = "https://github.com/dylanrussellmd/pycite/issues"
