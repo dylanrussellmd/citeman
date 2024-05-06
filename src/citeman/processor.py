@@ -1,3 +1,4 @@
+from bibtexparser.model import DuplicateBlockKeyBlock
 from .query import CrossRef, Query
 from .bibliography import write
 from .utils import removeBraces
@@ -128,6 +129,13 @@ class Processor():
                 return True
             else:
                 return False
+            
+    def removeDuplicateBlocks(self):
+        """
+        Removes duplicate blocks from the library.
+        """
+        duplicates = [block for block in self.library.blocks if isinstance(block, DuplicateBlockKeyBlock)]
+        self.library.remove(duplicates)
 
     def getQuery(self, index) -> Query:
         """

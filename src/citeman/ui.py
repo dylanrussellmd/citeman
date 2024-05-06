@@ -1,4 +1,3 @@
-from bibtexparser import Library
 from consolemenu import ConsoleMenu, Screen, SelectionMenu
 from consolemenu.items import FunctionItem
 from consolemenu.prompt_utils import PromptUtils, UserQuit
@@ -21,6 +20,20 @@ def libraryIsEmpty(processor):
         pu.enter_to_continue()
         return True
     return False
+
+def queryHistoryIsEmpty(processor):
+    if not processor.queryHistory:
+        pu = PromptUtils(Screen())
+        pu.println(f"Query history is {color('empty', fg='red')}.")
+        pu.enter_to_continue()
+        return True
+    return False
+
+def prettyPrintQuery(query):
+    return f"{query.id} - {queryReport(query)}"
+
+def prettyPrintQueries(queries):
+    return [prettyPrintQuery(query) for query in queries]
 
 def prettyKey(key):
     key = f"[@{key}]"
@@ -88,6 +101,7 @@ def QueryInput(processor):
                     pu.println(prettyKey(block.key), color('added to library.', fg='green'), "\n")
                 except ValueError as e:
                     pu.println(prettyKey(block.key), color('appears to be a duplicate key.', fg='red'))
+                    processor.removeDuplicateBlocks()
                     if processor.compare(query):
                         pu.println(prettyKey(block.key), color(f"already exists in library with matching {query.type} {query.id}.", fg='red'))
                         pu.println(prettyKey(block.key), color('not added to library.', fg='red'))
@@ -97,8 +111,6 @@ def QueryInput(processor):
                         pu.println()
                         if alternate:
                             processor.incrementKey(block)
-                            print(block)
-                            print(query.block)
                             processor.add(block)
                             pu.println(prettyKey(block.key), color('added to library with alternate key.', fg='green'), "\n")
                         else:
@@ -159,6 +171,20 @@ def removeCitation(block, processor):
     pu.enter_to_continue()
     pu.clear()
 
+#def showHistoricalQueries(processor):
+#    while True:
+#        if queryHistoryIsEmpty(processor):
+#            return
+#        title = "Select a previous query to view."
+#        queries = processor.queryHistory
+#        exit = len(queries)
+#        selection = SelectionMenu.get_selection(prettyPrintQueries(queries), title=title)
+#        try:
+#            pass
+#        except IndexError:
+#            if selection == exit:
+#                break
+
 def logo():
     logo_path = pkg_resources.resource_filename(__name__, 'logo')
     with open(logo_path, 'r', encoding="utf-8") as f:
@@ -167,10 +193,12 @@ def logo():
 def mainMenu():
     library = setup()
     processor = Processor(library)
-    menu = ConsoleMenu(logo(), "A simple command line citation manager for your academic manuscript.", show_exit_option=False)
+    subtitle = f"A simple command line citation manager for your academic manuscript."
+    menu = ConsoleMenu(logo(), subtitle, show_exit_option=False)
     
     menu.append_item(FunctionItem("Query", QueryInput, [processor]))
     menu.append_item(FunctionItem("Show Citations", showCitations, [processor]))
     menu.append_item(FunctionItem("Remove Citations", removeCitations, [processor]))
+    #menu.append_item(FunctionItem("Show Historical Queries", showHistoricalQueries, [processor]))
 
     menu.show()

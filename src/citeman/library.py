@@ -10,13 +10,7 @@ class EntrySplitter(Splitter):
         super().__init__(bibstr)
 
     def split(self) -> Entry:      
-        """Split the bibtex-string into blocks and add them to the library.
 
-        Args:
-            library: The library to add the blocks to. If None, a new library is created.
-        Returns:
-            The library with the added blocks.
-        """
         self._markiter = re.finditer(
             r"(?<!\\)[\{\}\",=\n]|@[\w]*( |\t)*(?={)", self.bibstr, re.MULTILINE
         )

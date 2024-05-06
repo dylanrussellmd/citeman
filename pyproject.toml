@@ -24,7 +24,8 @@ classifiers = [
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent"
 ]
-dynamic = ["version"]
+version = "0.1.36"
+#dynamic = ["version"]
 
 # https://setuptools.pypa.io/en/latest/userguide/datafiles.html
 # for all [tool.*] headings below

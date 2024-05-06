@@ -1,5 +1,6 @@
 import os
-from bibtexparser import parse_file, write_file, Library
+from bibtexparser.entrypoint import parse_file, write_file
+from bibtexparser.library import Library
 
 def setup():
     bib = 'bibliography.bib'
