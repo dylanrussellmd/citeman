@@ -1,7 +1,7 @@
-from bibtexparser.model import DuplicateBlockKeyBlock
+from bibtexparser.model import DuplicateBlockKeyBlock, Field
 from .query import CrossRef, Query
 from .bibliography import write
-from .utils import removeBraces
+from .utils import isFieldMissing, removeBraces
 
 class Processor():
     """
@@ -49,7 +49,11 @@ class Processor():
             self.queryHistory.append(query)
         except:
             raise
-    
+
+    def checkCriticalField(self, block, field):
+        if isFieldMissing(block, field):
+            raise CriticalFieldException(field)
+        
     def add(self, block) -> None:
         """
         Adds a block to the library and writes the library to .bib file.
@@ -73,6 +77,19 @@ class Processor():
         """
         self.library.remove(block)
         self.write()
+
+    def updateField(self, block, field, value) -> None:
+
+        if isFieldMissing(block, field):
+            raise ValueError(f"Field {field} does not exist in the block.")
+        elif not isFieldMissing(block, field):
+            block.set_field(Field(field, value))
+
+    def addField(self, block, field, value) -> None:
+        if not isFieldMissing(block, field):
+            raise ValueError(f"Field {field} already exists in the block.")
+
+        block.set_field(Field(field, value))
 
     def write(self) -> None:
         """
@@ -231,3 +248,8 @@ class TypedList(list):
         for element in iterable:
             self._validate(element)
         super().extend(iterable)
+
+class CriticalFieldException(Exception):
+    def __init__(self, field):
+        self.field = field
+        super().__init__(f"Missing critical field: {field}")

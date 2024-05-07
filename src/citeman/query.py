@@ -19,7 +19,7 @@ class Query:
         self.id = self._handleId(id)
         self.type = self._handleType()
         self.result = self._handleResult()
-        self.block = self._handleBlock() 
+        self.block = self._handleBlock()
 
     def _fail(self, result):
         self.success = False
@@ -80,9 +80,9 @@ class Query:
 
     def _handleBlock(self):
         if self.success:
-           block = EntrySplitter(self.result).split()
-           self.result = f"Found {self.type} {self.id}"
-           return block
+            block = EntrySplitter(self.result).split()
+            self.result = f"Found {self.type} {self.id}"
+            return block
         return None
 
 class ReID(Enum):

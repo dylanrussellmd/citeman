@@ -2,9 +2,9 @@ from consolemenu import ConsoleMenu, Screen, SelectionMenu
 from consolemenu.items import FunctionItem
 from consolemenu.prompt_utils import PromptUtils, UserQuit
 from colors import color
-from .processor import Processor
+from .processor import CriticalFieldException, Processor
 from .bibliography import setup
-from .utils import removeBraces
+from .utils import isFieldMissing, removeBraces, removeAt
 import pkg_resources
 
 def queryReport(query):
@@ -62,17 +62,19 @@ def prettyTitle(title):
     return color(title, fg='green')
 
 def prettyPrintBlock(block):
-    return f"\n{prettyKey(block.key)}\n{block.raw}\n"
+    return f"\n{prettyKey(block.key)}\n{block.raw}"
 
 def prettyPrintBlockShort(block):
-        
-    author = block.get('author').value
-    year = block.get('year').value
-    title = block.get('title').value
+    elements = []
+    if not isFieldMissing(block, 'author'):
+        elements.append(prettyAuthor(block.get('author').value))
+    if not isFieldMissing(block, 'year'):
+        elements.append(prettyYear(block.get('year').value))
+    if not isFieldMissing(block, 'title'):
+        elements.append(prettyTitle(block.get('title').value))
 
-    string = f"{prettyAuthor(author)}, {prettyYear(year)}, {prettyTitle(title)}\n"
-    return string
-
+    return ', '.join(elements) if elements else 'No author, title, or year available.'
+    
 def prettyPrintBlocks(blocks):
     return [prettyPrintBlockShort(block) for block in blocks]
 
@@ -93,6 +95,27 @@ def QueryInput(processor):
             pu.println(queryReport(query))
             block = query.block
             pu.println(prettyPrintBlock(block))
+            pu.println()
+            critical_fields = ['author', 'title', 'year']
+            while len(critical_fields) > 0:
+                field = critical_fields.pop(0)
+                try:
+                    processor.checkCriticalField(block, field)
+                except CriticalFieldException as e:
+                    pu.println(color(f"Missing {e.field} field.", fg='red'))
+                    addField = pu.prompt_for_yes_or_no(f"Add {color(e.field, fg='blue')} field?")
+                    if addField:
+                        value = pu.input(f"Enter {color(e.field, fg='blue')}: ").input_string.strip()
+                        processor.addField(block, e.field, value)
+                        pu.println(f"{color(e.field, fg='blue')} {color('field added', fg='green')}.")
+                        pu.println()        
+
+            if not isFieldMissing(block, 'author'):
+                processor.updateField(block, 'author', removeBraces(block.get('author').value))
+            
+            key = removeAt(pu.input("Enter key (Enter to accept default key): ", default=color(f"{block.key}", fg='blue')).input_string.strip())
+            if key != block.key:
+                block.key = key
             add = pu.prompt_for_yes_or_no(f"Add {prettyKey(block.key)} to library?")
             pu.println()
             if add: 
