@@ -54,7 +54,7 @@ class Query:
     @staticmethod
     def _type(id):
         for reid in ReID:
-            if re.match(reid.value, id, flags=re.I):
+            if bool(re.search(reid.value, id, flags=re.I)):
                 return reid.name
         raise ValueError("ID is not a valid article identifier")
 
@@ -86,7 +86,7 @@ class Query:
         return None
 
 class ReID(Enum):
-    DOI = r"^10\.\d{4,9}\/[-._;()/:A-Z0-9]+$"
+    DOI = r"10\.\d{4,9}\/[-._;()/:A-Z0-9]+$"
     PMID = r"^\d+$"
 
 # https://www.crossref.org/blog/dois-and-matching-regular-expressions/
