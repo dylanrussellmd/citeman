@@ -1,13 +1,15 @@
+from typing import List
 from bibtexparser.splitter import Splitter
-from bibtexparser.model import Entry
+from bibtexparser.model import Entry, Field
+from bibtexparser.writer import BibtexFormat, VAL_SEP, _val_intent_string
 from bibtexparser.exceptions import BlockAbortedException, ParserStateException
 import logging
 import re
 
 # Overwriting bibtexparser.Splitter to return an Entry.
 class EntrySplitter(Splitter):
-    def __init__(self, bibstr: str):
-        super().__init__(bibstr)
+    #def __init__(self, bibstr: str):
+    #    super().__init__(bibstr)
 
     def split(self) -> Entry:      
 
@@ -78,3 +80,23 @@ class EntrySplitter(Splitter):
                 pass
 
         return entry
+
+# Taken from https://github.com/sciunto-org/python-bibtexparser/blob/main/bibtexparser/writer.py#L41
+# Modified slightly to use here without having to specify a bibtex_format as in the original and 
+# to return a concatenated string at the end.
+def getBlockRaw(block: Entry) -> List[str]:
+    res = ["@", block.entry_type, "{", block.key, ",\n"]
+    bibtex_format = BibtexFormat()
+    field: Field
+    for i, field in enumerate(block.fields):
+        res.append(bibtex_format.indent)
+        res.append(field.key)
+        res.append(_val_intent_string(bibtex_format, field.key))
+        res.append(VAL_SEP)
+        res.append(field.value)
+        if bibtex_format.trailing_comma or i < len(block.fields) - 1:
+            res.append(",")
+        res.append("\n")
+    res.append("}\n")
+    
+    return "".join(res)

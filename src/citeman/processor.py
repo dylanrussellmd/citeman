@@ -1,4 +1,6 @@
 from bibtexparser.model import DuplicateBlockKeyBlock, Field
+
+from citeman.parser import getBlockRaw
 from .query import CrossRef, Query
 from .bibliography import write
 from .utils import isFieldMissing, removeBraces
@@ -84,12 +86,27 @@ class Processor():
             raise ValueError(f"Field {field} does not exist in the block.")
         elif not isFieldMissing(block, field):
             block.set_field(Field(field, value))
+            block._raw = getBlockRaw(block)
 
     def addField(self, block, field, value) -> None:
         if not isFieldMissing(block, field):
             raise ValueError(f"Field {field} already exists in the block.")
 
         block.set_field(Field(field, value))
+        block._raw = getBlockRaw(block)
+
+    def changeKey(self, block, key) -> None:
+        """
+        Changes the key of a block in the library.
+
+        Args:
+            block (Block): The block whose key is to be changed.
+            key (str): The new key to assign to the block.
+        """
+        if self._keyExists(key):
+            raise ValueError(f"Key {key} already exists in the library.")
+        block.key = key
+        block._raw = getBlockRaw(block)
 
     def write(self) -> None:
         """
@@ -144,8 +161,7 @@ class Processor():
         for entry in entries:
             if entry.key == key:
                 return True
-            else:
-                return False
+        return False
             
     def removeDuplicateBlocks(self):
         """

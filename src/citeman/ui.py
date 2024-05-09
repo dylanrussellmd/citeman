@@ -113,9 +113,17 @@ def QueryInput(processor):
             if not isFieldMissing(block, 'author'):
                 processor.updateField(block, 'author', removeBraces(block.get('author').value))
             
-            key = removeAt(pu.input("Enter key (Enter to accept default key): ", default=color(f"{block.key}", fg='blue')).input_string.strip())
-            if key != block.key:
-                block.key = key
+            while True:
+                key = removeAt(pu.input("Enter key (Enter to accept default key): ", default=color(f"{block.key}", fg='blue')).input_string.strip())
+                if key != block.key:
+                        try:
+                            processor.changeKey(block, key)
+                            break
+                        except ValueError as e:
+                            pu.println(f"{color(e, fg='red')} Please enter a different key.")
+                            pu.println()
+                else:
+                    break
             add = pu.prompt_for_yes_or_no(f"Add {prettyKey(block.key)} to library?")
             pu.println()
             if add: 
