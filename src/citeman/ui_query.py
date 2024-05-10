@@ -18,26 +18,18 @@ def QueryInput(processor):
         if query.success:
             # Print successful query report
             printQuerySuccessReport(pu, query)
+            
             # Check critical fields
             criticalFieldsUI(pu, processor, query.block, ['author', 'year', 'title'])
             
             # Update the author field (if present) to remove the braces.
             # This is necessary to prevent double brace wrapping of the author field which treats
             # a list of multiple authors as a single author.
-            if not isFieldMissing(query.block, 'author'):
-                processor.updateField(query.block, 'author', removeBraces(query.block.get('author').value))
+            updateAuthorField(processor, query.block)
             
-            while True:
-                key = removeAt(pu.input("Enter key (Enter to accept default key): ", default=color(f"{block.key}", fg='blue')).input_string.strip())
-                if key != block.key:
-                        try:
-                            processor.changeKey(block, key)
-                            break
-                        except ValueError as e:
-                            pu.println(f"{color(e, fg='red')} Please enter a different key.")
-                            pu.println()
-                else:
-                    break
+            # Accept or alter the key of the block
+            acceptKeyUI(processor, query.block)
+
             add = pu.prompt_for_yes_or_no(f"Add {prettyKey(block.key)} to library?")
             pu.println()
             if add: 
@@ -63,6 +55,8 @@ def QueryInput(processor):
             else:
                 pu.println(prettyKey(block.key), color('not added to library.', fg='red'), "\n")
         else:
+            # Print query report if query is not successful
+            # Should contain the error message.
             pu.println(queryReport(query))
         
         again = pu.prompt_for_yes_or_no(f"Search {color('again?', fg='blue')}")
@@ -87,6 +81,21 @@ def criticalFieldsUI(pu, processor, block, fields):
                 value = pu.input(f"Enter {color(e.field, fg='blue')}: ").input_string.strip()
                 processor.addField(block, e.field, value)
                 pu.println(f"{color(e.field, fg='blue')} {color('field added', fg='green')}.")
-                pu.println()       
+                pu.println()
 
+def updateAuthorField(processor, block):
+    if not isFieldMissing(block, 'author'):
+        processor.updateField(block, 'author', removeBraces(block.get('author').value))
 
+def acceptKeyUI(processor, block):
+    while True:
+        key = removeAt(pu.input("Enter key (Enter to accept default key): ", default=color(f"{block.key}", fg='blue')).input_string.strip())
+        if key != block.key:
+                try:
+                    processor.changeKey(block, key)
+                    break
+                except ValueError as e:
+                    pu.println(f"{color(e, fg='red')} Please enter a different key.")
+                    pu.println()
+        else:
+            break
