@@ -1,6 +1,5 @@
 from bibtexparser.model import DuplicateBlockKeyBlock, Field
-
-from citeman.parser import getBlockRaw
+from .parser import getBlockRaw
 from .query import CrossRef, Query
 from .bibliography import write
 from .utils import isFieldMissing, removeBraces
@@ -55,7 +54,7 @@ class Processor():
     def checkCriticalField(self, block, field):
         if isFieldMissing(block, field):
             raise CriticalFieldException(field)
-        
+    
     def add(self, block) -> None:
         """
         Adds a block to the library and writes the library to .bib file.
