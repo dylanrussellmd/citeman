@@ -98,13 +98,8 @@ class ReID(Enum):
     DOI = r"10\.\d{4,9}\/[-._;()/:A-Z0-9]+$"
     PMID = r"^\d+$"
 
-# https://www.crossref.org/blog/dois-and-matching-regular-expressions/
-# Need to review to learn and consolidate.
-# When to use static methods?
-
-# consider allowing different urls/formats for cn.contentnegotiation
 class CrossRef(Query):
-
+   
     @staticmethod
     def _result(id):
         try:
