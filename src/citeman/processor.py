@@ -2,7 +2,7 @@ from bibtexparser.model import DuplicateBlockKeyBlock, Field
 from .parser import getBlockRaw
 from .query import CrossRef, Query
 from .bibliography import write
-from .utils import isFieldMissing, removeBraces
+from .utils import TypedList, removeBraces
 
 class Processor():
     """
@@ -50,10 +50,6 @@ class Processor():
             self.queryHistory.append(query)
         except:
             raise
-
-    def checkCriticalField(self, block, field):
-        if isFieldMissing(block, field):
-            raise CriticalFieldException(field)
     
     def add(self, block) -> None:
         """
@@ -78,23 +74,40 @@ class Processor():
         """
         self.library.remove(block)
         self.write()
-
-    def updateField(self, block, field, value) -> None:
-
-        if isFieldMissing(block, field):
-            raise ValueError(f"Field {field} does not exist in the block.")
-        elif not isFieldMissing(block, field):
-            block.set_field(Field(field, value))
-            block._raw = getBlockRaw(block)
-
-    def addField(self, block, field, value) -> None:
-        if not isFieldMissing(block, field):
-            raise ValueError(f"Field {field} already exists in the block.")
-
-        block.set_field(Field(field, value))
+    
+    @staticmethod
+    def updateBlockRaw(block) -> None:
         block._raw = getBlockRaw(block)
 
-    def changeKey(self, block, key) -> None:
+    @staticmethod
+    def checkCriticalField(block, field):
+        try:
+            Processor.fieldMissing(block, field)
+        except:
+            raise CriticalFieldException(field)
+
+    @staticmethod
+    def updateField(block, field, value) -> None:
+        try:
+            Processor.fieldMissing(block, field)
+        except:
+            raise
+        
+        block.set_field(Field(field, value))
+        Processor.updateBlockRaw(block)
+
+    @staticmethod
+    def addField(block, field, value) -> None:
+        try:
+            Processor.fieldExists(block, field)
+        except:
+            raise
+
+        block.set_field(Field(field, value))
+        Processor.updateBlockRaw(block)
+
+    @staticmethod
+    def updateKey(block, key) -> None:
         """
         Changes the key of a block in the library.
 
@@ -102,8 +115,6 @@ class Processor():
             block (Block): The block whose key is to be changed.
             key (str): The new key to assign to the block.
         """
-        if self._keyExists(key):
-            raise ValueError(f"Key {key} already exists in the library.")
         block.key = key
         block._raw = getBlockRaw(block)
 
@@ -113,7 +124,7 @@ class Processor():
         """
         write(self.library)
 
-    def compare(self, query):
+    def idExists(self, query):
         """
         Compares a given article ID with the library.
 
@@ -131,22 +142,8 @@ class Processor():
                     return True
             else:
                 return False
-            
-    def incrementKey(self, block):
-        """
-        Increments the key of a block in the library to avoid duplicates.
-
-        Args:
-            key (str): The new key to assign to the block.
-        """
-        key_v = 1
-        new_key = block.key + f"_{key_v}"
-        while self._keyExists(new_key):
-            key_v += 1
-            new_key = block.key + f"_{key_v}"
-        block.key = new_key
-
-    def _keyExists(self, key):
+    
+    def keyExists(self, key):
         """
         Checks if a key already exists in the library.
 
@@ -159,8 +156,36 @@ class Processor():
         entries = self.library.entries
         for entry in entries:
             if entry.key == key:
-                return True
-        return False
+                raise KeyExistsError(key)
+    
+    @staticmethod
+    def fieldExists(block, field):
+        if block.get(field) is not None:
+            raise FieldExistsError(field)
+    
+    @staticmethod
+    def fieldMissing(block, field):
+        if block.get(field) is None:
+            raise FieldMissingError(field)
+            
+    def incrementKey(self, block):
+        """
+        Increments the key of a block in the library to avoid duplicates.
+
+        Args:
+            key (str): The new key to assign to the block.
+        """
+        key_v = 1
+        new_key = block.key + f"_{key_v}"
+        while True:
+            try:
+                key_v += 1
+                new_key = block.key + f"_{key_v}"
+                self.keyExists(new_key)
+                break
+            except KeyExistsError:
+                pass
+        block.key = new_key
             
     def removeDuplicateBlocks(self):
         """
@@ -190,81 +215,22 @@ class Processor():
         """
         return self.getQuery(-1)
     
-class TypedList(list):
-    """
-    A typed list that enforces a specific element type.
-
-    Attributes:
-        element_type (type): The type of elements allowed in the list.
-
-    Methods:
-        __init__(self, element_type, initial_list): Initializes a TypedList object with an element type and an initial list.
-        _validate(self, element): Validates if an element is of the correct type.
-        append(self, element): Appends an element to the list after validating its type.
-        insert(self, index, element): Inserts an element into the list at a specific index after validating its type.
-        extend(self, iterable): Extends the list with elements from an iterable after validating their types.
-    """
-
-    def __init__(self, element_type, initial_list=None):
-        """
-        Initializes a TypedList object with an element type and an initial list.
-
-        Args:
-            element_type (type): The type of elements allowed in the list.
-            initial_list (list, optional): An initial list to populate the TypedList with. Defaults to None.
-        """
-        self.element_type = element_type
-        if initial_list:
-            for element in initial_list:
-                self._validate(element)
-                super().append(element)
-
-    def _validate(self, element):
-        """
-        Validates if an element is of the correct type.
-
-        Args:
-            element: The element to be validated.
-
-        Raises:
-            TypeError: If the element is not of the correct type.
-        """
-        if not isinstance(element, self.element_type):
-            raise TypeError(f"Only {self.element_type.__name__} elements are allowed")
-
-    def append(self, element):
-        """
-        Appends an element to the list after validating its type.
-
-        Args:
-            element: The element to be appended.
-        """
-        self._validate(element)
-        super().append(element)
-
-    def insert(self, index, element):
-        """
-        Inserts an element into the list at a specific index after validating its type.
-
-        Args:
-            index (int): The index at which to insert the element.
-            element: The element to be inserted.
-        """
-        self._validate(element)
-        super().insert(index, element)
-
-    def extend(self, iterable):
-        """
-        Extends the list with elements from an iterable after validating their types.
-
-        Args:
-            iterable (iterable): The iterable containing elements to be added to the list.
-        """
-        for element in iterable:
-            self._validate(element)
-        super().extend(iterable)
-
 class CriticalFieldException(Exception):
     def __init__(self, field):
         self.field = field
-        super().__init__(f"Missing critical field: {field}")
+        super().__init__("Missing critical field: ")
+
+class KeyExistsError(ValueError):
+    def __init__(self, key) -> None:
+        self.key = key
+        super().__init__("Key already exists: ")
+
+class FieldExistsError(ValueError):
+    def __init__(self, field) -> None:
+        self.field = field
+        super().__init__("Field already exists: ")
+
+class FieldMissingError(ValueError):
+    def __init__(self, field) -> None:
+        self.field = field
+        super().__init__("Field missing: ")
