@@ -2,9 +2,9 @@ from consolemenu import PromptUtils, Screen, UserQuit
 from colors import red, blue, green, strip_color
 from .ui_pretty import prettyKey, prettyPrintBlock, prettyPrintQueryReport
 from .utils import removeAt, removeBraces
-from .processor import CriticalFieldException, KeyExistsError
+from .errors import CriticalFieldException, KeyExistsError
 
-def QueryInput(processor):
+def queryInput(processor):
     pu = PromptUtils(Screen())
     while True:
         try:
@@ -17,83 +17,68 @@ def QueryInput(processor):
         # The last query should be the query just processed.    
         processor.processQuery(input)
         query = processor.getLastQuery()
-
+        pu.println(prettyPrintQueryReport(query))
         # If the query is succesful (i.e., no errors and returns a citation), do:
         if query.success:
-            # Print successful query report
-            printQuerySuccessReport(pu, query)  
+            pu.println(prettyPrintBlock(query.block))
+            pu.println()
             confirm = pu.prompt_for_yes_or_no("Is this the citation you were looking for? ")
+
             if confirm:       
-                # Check critical fields
-                criticalFieldsUI(pu, processor, query.block, ['author', 'year', 'title'])
+                criticalFieldsUI(pu, processor, query, ['author', 'year', 'title'])
                 # Update the author field (if present) to remove the braces.
                 # This is necessary to prevent double brace wrapping of the author field which treats
                 # a list of multiple authors as a single author.
-                updateAuthorField(processor, query.block)
-                # Accept or alter the key of the block
-                acceptKeyUI(pu, processor, query.block)
-                # Add the block to the library
+                updateAuthorField(processor, query)
+                acceptKeyUI(pu, processor, query)
                 addKeyUI(pu, processor, query)
-        else:
-            # Print query report if query is not successful.
-            # Should contain the error message.
-            pu.println(prettyPrintQueryReport(query))
         
         again = pu.prompt_for_yes_or_no("Search again?")
         if not again:
             break
         pu.clear()
 
-def printQuerySuccessReport(pu, query):
-    pu.println(prettyPrintQueryReport(query))
-    pu.println(prettyPrintBlock(query.block))
-    pu.println()
-
-def criticalFieldsUI(pu, processor, block, fields):
+def criticalFieldsUI(pu, processor, query, fields):
     while len(fields) > 0:
         field = fields.pop(0)
         try:
-            processor.checkCriticalField(block, field)
+            processor.checkCriticalField(query.block, field)
         except CriticalFieldException as e:
             pu.println(f"{red(e)}{blue(e.field)}.")
             addField = pu.prompt_for_yes_or_no(f"Add {blue(e.field)} field? ")
             if addField:
                 value = pu.input(f"Enter {blue(e.field)}: ").input_string.strip()
-                processor.addField(block, e.field, value)
+                processor.addField(query.block, e.field, value)
                 pu.println(f"{blue(e.field)} {green('field added')}.")
                 pu.println()
 
-def updateAuthorField(processor, block):
+def updateAuthorField(processor, query):
     try:
-        processor.updateField(block, 'author', removeBraces(block.get('author').value))
+        processor.updateField(query.block, 'author', removeBraces(query.block.get('author').value))
     except:
         pass
 
-def acceptKeyUI(pu, processor, block):
+def acceptKeyUI(pu, processor, query):
     while True:
-        key = pu.input("Enter key (Enter to accept default key): ", default=blue(block.key)).input_string.strip()
+        pu.println()
+        key = pu.input("Enter key (Enter to accept default key): ", default=blue(query.block.key)).input_string.strip()
         key = removeAt(strip_color(key))
         try:
             processor.keyExists(key)
-            if key != block.key:
-                processor.updateKey(block, key)
+            if key != query.block.key:
+                processor.updateKey(query.block, key)
             break
         except KeyExistsError as e:
             pu.println(f"{red(e)}{blue(e.key)}. Please enter a different key.")
-            pu.println()
 
 def addKeyUI(pu, processor, query):
-    block = query.block
-    add = pu.prompt_for_yes_or_no(f"Add {prettyKey(block.key)} to library? ")
+    add = pu.prompt_for_yes_or_no(f"Add {prettyKey(query.block.key)} to library? ")
     pu.println()
     if add: 
         try:
-            processor.add(block)
-            pu.println(prettyKey(block.key), green('added to library.'), "\n")
+            processor.add(query.block)
+            pu.println(prettyKey(query.block.key), green('added to library.'), "\n")
         except:
             raise
     else:
-        pu.println(prettyKey(block.key), red('not added to library.'), "\n")
-
-
-
+        pu.println(prettyKey(query.block.key), red('not added to library.'), "\n")

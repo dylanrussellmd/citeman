@@ -1,4 +1,5 @@
 from bibtexparser.model import DuplicateBlockKeyBlock, Field
+from .errors import CriticalFieldException, FieldExistsError, FieldMissingError, HistoryEmptyError, KeyExistsError, LibraryEmptyError
 from .parser import getBlockRaw
 from .query import CrossRef, Query
 from .bibliography import write
@@ -31,7 +32,19 @@ class Processor():
             library (Library): The library object that stores the blocks.
         """
         self.library = library
-        self.queryHistory = TypedList(Query) 
+        self._queryHistory = TypedList(Query) 
+
+    @property
+    def entries(self):
+        if not self.library.entries:
+            raise LibraryEmptyError()
+        return self.library.entries
+
+    @property 
+    def queryHistory(self):
+        if not self._queryHistory:
+            raise HistoryEmptyError()
+        return self._queryHistory
 
     def processQuery(self, input):
         """
@@ -47,7 +60,7 @@ class Processor():
         """
         try:
             query = CrossRef(input)
-            self.queryHistory.append(query)
+            self._queryHistory.append(query)
         except:
             raise
     
@@ -134,7 +147,10 @@ class Processor():
         Returns:
             bool: True if the article ID is in the library, False otherwise.
         """
-        entries = self.library.entries
+        try:
+            entries = self.entries
+        except LibraryEmptyError:
+            return False
         type = query.type
         for entry in entries:
             id = removeBraces(entry.get(type).value)
@@ -144,16 +160,10 @@ class Processor():
                 return False
     
     def keyExists(self, key):
-        """
-        Checks if a key already exists in the library.
-
-        Args:
-            key (str): The key to check.
-
-        Returns:
-            bool: True if the key exists in the library, False otherwise.
-        """
-        entries = self.library.entries
+        try:
+            entries = self.entries
+        except LibraryEmptyError:
+            return
         for entry in entries:
             if entry.key == key:
                 raise KeyExistsError(key)
@@ -167,26 +177,8 @@ class Processor():
     def fieldMissing(block, field):
         if block.get(field) is None:
             raise FieldMissingError(field)
-            
-    def incrementKey(self, block):
-        """
-        Increments the key of a block in the library to avoid duplicates.
-
-        Args:
-            key (str): The new key to assign to the block.
-        """
-        key_v = 1
-        new_key = block.key + f"_{key_v}"
-        while True:
-            try:
-                key_v += 1
-                new_key = block.key + f"_{key_v}"
-                self.keyExists(new_key)
-                break
-            except KeyExistsError:
-                pass
-        block.key = new_key
-            
+    
+    # MIGHT NOT BE NEEDED
     def removeDuplicateBlocks(self):
         """
         Removes duplicate blocks from the library.
@@ -214,23 +206,3 @@ class Processor():
             Query: The last query object in the query history.
         """
         return self.getQuery(-1)
-    
-class CriticalFieldException(Exception):
-    def __init__(self, field):
-        self.field = field
-        super().__init__("Missing critical field: ")
-
-class KeyExistsError(ValueError):
-    def __init__(self, key) -> None:
-        self.key = key
-        super().__init__("Key already exists: ")
-
-class FieldExistsError(ValueError):
-    def __init__(self, field) -> None:
-        self.field = field
-        super().__init__("Field already exists: ")
-
-class FieldMissingError(ValueError):
-    def __init__(self, field) -> None:
-        self.field = field
-        super().__init__("Field missing: ")

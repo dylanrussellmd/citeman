@@ -1,4 +1,5 @@
 import re
+from .errors import LibraryEmptyError
 
 def removeBraces(string):
     """

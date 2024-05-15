@@ -1,5 +1,4 @@
 from colors import color
-from .processor import Processor
 from .utils import removeBraces
 
 def prettyPrintQueryReport(query):
@@ -46,15 +45,12 @@ def prettyPrintBlock(block):
 def prettyPrintBlockShort(block):
     elements = []
     try:
-        Processor.fieldExists(block, 'author')
         elements.append(prettyAuthor(block.get('author').value))
     except: pass
     try:
-        Processor.fieldExists(block, 'year')
         elements.append(prettyYear(block.get('year').value))
     except: pass
     try:
-        Processor.fieldExists(block, 'title')
         elements.append(prettyTitle(block.get('title').value))
     except: pass
 
