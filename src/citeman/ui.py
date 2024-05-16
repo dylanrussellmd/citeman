@@ -28,11 +28,9 @@ class MainMenu(ConsoleMenu):
                          show_exit_option=False,
                          formatter=formatter)
 
-
 def mainMenu():
     library = prepare_library()
     processor = prepare_processor(library)
-    #subtitle = f"A simple {blue('command line citation manager')} for your academic manuscript."
     menu = MainMenu()
     
     menu.append_item(FunctionItem("Query", queryInput, [processor]))
