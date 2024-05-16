@@ -1,4 +1,4 @@
-from consolemenu import PromptUtils
+from consolemenu import PromptUtils, Screen
 from .ui_list import listCitations
 from .ui_pretty import prettyPrintBlock
 

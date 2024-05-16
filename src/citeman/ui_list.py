@@ -1,20 +1,36 @@
 from consolemenu import SelectionMenu
 from .ui_notice import noticeScreen
-from .ui_pretty import prettyPrintBlocks
-from .errors import LibraryEmptyError
+from .ui_pretty import prettyPrintBlocks, prettyPrintQueries
+from .errors import HistoryEmptyError, LibraryEmptyError
 from colors import red
 
-def listCitations(processor, message, action):
-    try:
-        entries = processor.entries
-    except LibraryEmptyError as e:
-        noticeScreen(e, red)
-        return
-    exit = len(entries)
-    selection = SelectionMenu.get_selection(prettyPrintBlocks(entries), title=message)
-    while True:        
+def listCitations(processor, message, action, *args):
+    while True:
         try:
-            action(entries[selection])
+            entries = processor.entries
+        except LibraryEmptyError as e:
+            noticeScreen(e, red)
+            break
+
+        exit = len(entries)
+        try:
+            selection = SelectionMenu.get_selection(prettyPrintBlocks(entries), title=message)
+            action(entries[selection], *args)
+        except IndexError:
+            if selection == exit:
+                break
+
+def listQueries(processor, message, action, *args):
+    while True:
+        try:
+            queries = processor.queryHistory
+        except HistoryEmptyError as e:
+            noticeScreen(e, red)
+            break
+        exit = len(queries)
+        try:
+            selection = SelectionMenu.get_selection(prettyPrintQueries(queries), title=message)
+            action(queries[selection], *args)
         except IndexError:
             if selection == exit:
                 break

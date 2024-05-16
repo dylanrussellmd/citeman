@@ -1,25 +1,35 @@
-from colors import color
+from colors import green, red, blue, yellow
 from .utils import removeBraces
+
+def prettyPrintQueryShort(query):
+    if query.success:
+        return f"{query.id} - {green('Success')}"
+    elif not query.success:
+        return f"{query.id} - {red('Failure')}"   
 
 def prettyPrintQueryReport(query):
     if query.success:
-        return f"{color('Success:', fg='green')} {query.result}"
+        return f"{green('Success:')} {query.result}"
     elif not query.success:
-        return f"{color('Error:', fg='red')} {query.result}"
-
+        return f"{red('Error:')} {query.result}"
+    
+def prettyPrintQueryRaw(query):
+    if query.success:
+        return f"{blue('Original query results')}:\n{query.raw}"
+    
 def prettyPrintQuery(query):
-    return f"{query.id} - {prettyPrintQueryReport(query)}"
+    return f"{prettyPrintQueryReport(query)}\n\n{prettyPrintQueryRaw(query)}\n"
 
 def prettyPrintQueries(queries):
-    return [prettyPrintQuery(query) for query in queries]
+    return [prettyPrintQueryShort(query) for query in queries]
 
 def prettyKey(key):
     key = f"[@{key}]"
-    return f"{color(key, fg='blue')}"
+    return f"{blue(key)}"
 
 def prettyYear(year):
     year = removeBraces(year)
-    return color(year, fg='yellow')
+    return yellow(year)
 
 def prettyAuthor(authors):
     authors = removeBraces(authors)
@@ -33,14 +43,14 @@ def prettyAuthor(authors):
     if len(authors) > 1:
         author = f"{author} et al."
 
-    return color(author, fg='blue')
+    return blue(author)
 
 def prettyTitle(title):
     title = removeBraces(title)
-    return color(title, fg='green')
+    return green(title)
 
 def prettyPrintBlock(block):
-    return f"\n{prettyKey(block.key)}\n{block.raw}"
+    return f"{green('Markdown key:')}\n{prettyKey(block.key)}\n\n{green('Current citation:')}\n{block.raw}"
 
 def prettyPrintBlockShort(block):
     elements = []

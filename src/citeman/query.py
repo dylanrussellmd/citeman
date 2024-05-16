@@ -3,7 +3,7 @@ from enum import Enum
 from typing import Type
 from habanero import cn
 from requests import HTTPError
-from .parser import EntrySplitter, getBlockRaw
+from .entry import EntrySplitter, getEntryRaw
 import re
 import warnings
 import six
@@ -21,7 +21,7 @@ class Query:
         self.result = self._handleResult()
         self.block = self._handleBlock()
         self.raw = self._handleRaw()
-        self.block._raw = self._handleBlockRaw()
+        self.block._raw = self._handleEntryRaw()
 
     def _fail(self, result):
         self.success = False
@@ -90,9 +90,9 @@ class Query:
             return self.block._raw
         return None
 
-    def _handleBlockRaw(self):
+    def _handleEntryRaw(self):
         if self.success and self.raw is not None:
-            return getBlockRaw(self.block)
+            return getEntryRaw(self.block)
 
 class ReID(Enum):
     DOI = r"10\.\d{4,9}\/[-._;()/:A-Z0-9]+$"

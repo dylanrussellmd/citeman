@@ -1,9 +1,10 @@
 from bibtexparser.model import DuplicateBlockKeyBlock, Field
+from bibtexparser.entrypoint import write_file
+from pickle import dump
 from .errors import CriticalFieldException, FieldExistsError, FieldMissingError, HistoryEmptyError, KeyExistsError, LibraryEmptyError
-from .parser import getBlockRaw
+from .entry import getEntryRaw
 from .query import CrossRef, Query
-from .bibliography import write
-from .utils import TypedList, removeBraces
+from .utils import removeBraces
 
 class Processor():
     """
@@ -29,10 +30,10 @@ class Processor():
         Initializes a Processor object with a library.
 
         Args:
-            library (Library): The library object that stores the blocks.
+            library (Library): The library object that stores the entries.
         """
         self.library = library
-        self._queryHistory = TypedList(Query) 
+        self._queryHistory = list()
 
     @property
     def entries(self):
@@ -45,6 +46,13 @@ class Processor():
         if not self._queryHistory:
             raise HistoryEmptyError()
         return self._queryHistory
+    
+    def overwriteLibrary(self, library):
+        self.library = library
+
+    def save(self):
+        with open('citeman.p', 'wb') as f:
+            dump(self, f)
 
     def processQuery(self, input):
         """
@@ -76,7 +84,8 @@ class Processor():
         except:
             raise
 
-        self.write()
+        self._write()
+        self.save()
 
     def remove(self, block) -> None:
         """
@@ -86,11 +95,12 @@ class Processor():
             block (Block): The block to be removed from the library.
         """
         self.library.remove(block)
-        self.write()
-    
+        self._write()
+        self.save()
+
     @staticmethod
-    def updateBlockRaw(block) -> None:
-        block._raw = getBlockRaw(block)
+    def updateEntryRaw(block) -> None:
+        block._raw = getEntryRaw(block)
 
     @staticmethod
     def checkCriticalField(block, field):
@@ -107,7 +117,7 @@ class Processor():
             raise
         
         block.set_field(Field(field, value))
-        Processor.updateBlockRaw(block)
+        Processor.updateEntryRaw(block)
 
     @staticmethod
     def addField(block, field, value) -> None:
@@ -117,7 +127,7 @@ class Processor():
             raise
 
         block.set_field(Field(field, value))
-        Processor.updateBlockRaw(block)
+        Processor.updateEntryRaw(block)
 
     @staticmethod
     def updateKey(block, key) -> None:
@@ -129,13 +139,14 @@ class Processor():
             key (str): The new key to assign to the block.
         """
         block.key = key
-        block._raw = getBlockRaw(block)
+        block._raw = getEntryRaw(block)
 
-    def write(self) -> None:
+    def _write(self) -> None:
         """
         Writes the library to .bib file.
         """
-        write(self.library)
+        bib = 'bibliography.bib'
+        write_file(bib, self.library)
 
     def idExists(self, query):
         """

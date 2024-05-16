@@ -8,8 +8,6 @@ import re
 
 # Overwriting bibtexparser.Splitter to return an Entry.
 class EntrySplitter(Splitter):
-    #def __init__(self, bibstr: str):
-    #    super().__init__(bibstr)
 
     def split(self) -> Entry:      
 
@@ -84,7 +82,7 @@ class EntrySplitter(Splitter):
 # Taken from https://github.com/sciunto-org/python-bibtexparser/blob/main/bibtexparser/writer.py#L41
 # Modified slightly to use here without having to specify a bibtex_format as in the original and 
 # to return a concatenated string at the end.
-def getBlockRaw(block: Entry) -> List[str]:
+def getEntryRaw(block: Entry) -> List[str]:
     res = ["@", block.entry_type, "{", block.key, ",\n"]
     bibtex_format = BibtexFormat()
     field: Field

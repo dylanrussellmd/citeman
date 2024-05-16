@@ -16,11 +16,13 @@ def queryInput(processor):
         # Make the query and then return the last query from processor.
         # The last query should be the query just processed.    
         processor.processQuery(input)
+        pu.clear()
         query = processor.getLastQuery()
         pu.println(prettyPrintQueryReport(query))
         # If the query is succesful (i.e., no errors and returns a citation), do:
         if query.success:
-            pu.println(prettyPrintBlock(query.block))
+            pu.println()
+            pu.println(query.raw)
             pu.println()
             confirm = pu.prompt_for_yes_or_no("Is this the citation you were looking for? ")
 
@@ -60,7 +62,7 @@ def updateAuthorField(processor, query):
 
 def acceptKeyUI(pu, processor, query):
     while True:
-        pu.println()
+        pu.clear()
         key = pu.input("Enter key (Enter to accept default key): ", default=blue(query.block.key)).input_string.strip()
         key = removeAt(strip_color(key))
         try:
@@ -72,8 +74,9 @@ def acceptKeyUI(pu, processor, query):
             pu.println(f"{red(e)}{blue(e.key)}. Please enter a different key.")
 
 def addKeyUI(pu, processor, query):
+    pu.clear()
     add = pu.prompt_for_yes_or_no(f"Add {prettyKey(query.block.key)} to library? ")
-    pu.println()
+    pu.clear()
     if add: 
         try:
             processor.add(query.block)
