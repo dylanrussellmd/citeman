@@ -2,10 +2,8 @@ name: Publish citeman distribution 📦 to PyPI
 
 on: 
   push:
-    branch:
-      - main
     tags:
-      - 'v.*'
+      - '**'
 
 jobs:
   build:
